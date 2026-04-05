@@ -263,6 +263,7 @@ for k,v in [
     ("show_all_combos",False),("selected_skin",""),
     ("selected_season","All"),("session_id",str(uuid.uuid4())[:8]),
     ("sel_shirts",set()),("sel_pants",set()),
+    ("preview_combo_idx",0),
 ]:
     if k not in st.session_state: st.session_state[k] = v
 
@@ -371,6 +372,196 @@ def mannequin_svg(shirt_hex="#87CEEB", pant_hex="#001F5B", skin_hex="#D4956A"):
 def mannequin_img(shirt_hex, pant_hex, skin_hex="#D4956A", width=90, height=160):
     svg = mannequin_svg(shirt_hex, pant_hex, skin_hex)
     return svg_b64_img(svg, width, height)
+
+def mannequin_large_svg(shirt_hex="#3b5bdb", pant_hex="#1c3e6e", skin_hex="#D4956A"):
+    """High-detail Pixar-style full-body mannequin for the virtual try-on panel."""
+    sh_d = darker(shirt_hex, 30)
+    sh_l = lighter(shirt_hex, 45)
+    pt_d = darker(pant_hex, 28)
+    pt_l = lighter(pant_hex, 18)
+    sk_d = darker(skin_hex, 28)
+    hx = skin_hex.lstrip("#")
+    sr, sg, sb = int(hx[0:2],16), int(hx[2:4],16), int(hx[4:6],16)
+    lum_val = 0.2126*sr + 0.7152*sg + 0.0722*sb
+    hair = "#3d2314" if lum_val > 100 else "#1a0a00"
+
+    return f"""<svg width="200" height="420" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg">
+  <!-- ground shadow -->
+  <ellipse cx="100" cy="412" rx="42" ry="7" fill="rgba(0,0,0,0.13)"/>
+
+  <!-- ═══ SHOES ═══ -->
+  <!-- Left shoe body -->
+  <rect x="42" y="360" width="30" height="16" rx="6" fill="#1a1a2e"/>
+  <!-- Left shoe toe cap -->
+  <path d="M 42,370 C 36,368 34,375 38,379 C 44,383 68,382 72,378 C 74,374 72,368 68,367 L 42,367 Z" fill="#1a1a2e"/>
+  <!-- Left sole -->
+  <path d="M 36,377 L 72,377 C 74,384 68,389 58,389 L 44,389 C 36,389 34,384 36,377 Z" fill="#f1f5f9"/>
+  <!-- Left laces -->
+  <line x1="47" y1="363" x2="65" y2="363" stroke="white" stroke-width="1.5" opacity="0.55"/>
+  <line x1="46" y1="368" x2="66" y2="368" stroke="white" stroke-width="1.5" opacity="0.55"/>
+
+  <!-- Right shoe body -->
+  <rect x="128" y="360" width="30" height="16" rx="6" fill="#22223a"/>
+  <!-- Right shoe toe cap -->
+  <path d="M 158,370 C 164,368 166,375 162,379 C 156,383 132,382 128,378 C 126,374 128,368 132,367 L 158,367 Z" fill="#22223a"/>
+  <!-- Right sole -->
+  <path d="M 128,377 L 164,377 C 166,384 160,389 150,389 L 136,389 C 128,389 126,384 128,377 Z" fill="#f1f5f9"/>
+  <!-- Right laces -->
+  <line x1="135" y1="363" x2="153" y2="363" stroke="white" stroke-width="1.5" opacity="0.55"/>
+  <line x1="134" y1="368" x2="154" y2="368" stroke="white" stroke-width="1.5" opacity="0.55"/>
+
+  <!-- ═══ PANTS / LEGS ═══ -->
+  <!-- Left leg -->
+  <path d="M 82,228 C 78,272 72,316 58,362" stroke="{pant_hex}" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <!-- Left leg inner seam shading -->
+  <path d="M 84,228 C 80,270 75,313 62,358" stroke="{pt_d}" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <!-- Left leg highlight -->
+  <path d="M 79,240 C 76,278 72,315 60,356" stroke="{pt_l}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.22"/>
+  <!-- Rip detail left -->
+  <path d="M 70,308 L 82,306" stroke="{pt_l}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.55"/>
+  <path d="M 68,314 L 78,312" stroke="{pt_l}" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.4"/>
+
+  <!-- Right leg -->
+  <path d="M 118,228 C 122,272 128,316 142,362" stroke="{pant_hex}" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <!-- Right leg inner seam -->
+  <path d="M 116,228 C 120,270 125,313 138,358" stroke="{pt_d}" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <!-- Right leg highlight -->
+  <path d="M 121,240 C 124,278 128,315 140,356" stroke="{pt_l}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.22"/>
+
+  <!-- Crotch bridge -->
+  <ellipse cx="100" cy="229" rx="22" ry="10" fill="{pant_hex}"/>
+
+  <!-- ═══ WAISTBAND ═══ -->
+  <rect x="68" y="215" width="64" height="20" rx="6" fill="{pt_d}"/>
+  <!-- Belt buckle -->
+  <rect x="86" y="218" width="20" height="14" rx="3" fill="#9ca3af" opacity="0.85"/>
+  <rect x="89" y="220" width="14" height="10" rx="2" fill="#d1d5db" opacity="0.75"/>
+  <line x1="96" y1="220" x2="96" y2="230" stroke="#6b7280" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- ═══ LEFT ARM ═══ -->
+  <!-- Sleeve -->
+  <path d="M 70,110 C 52,130 40,160 32,192" stroke="{shirt_hex}" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <!-- Varsity sleeve accent band (lighter, near cuff) -->
+  <path d="M 32,192 C 29,203 30,213 32,220" stroke="{sh_l}" stroke-width="24" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <!-- Cuff ring -->
+  <path d="M 32,220 C 32,224 33,228 34,231" stroke="{sh_d}" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <!-- Left hand -->
+  <ellipse cx="34" cy="235" rx="12" ry="10" fill="{skin_hex}"/>
+  <!-- Fingers (subtle lines) -->
+  <path d="M 24,232 Q 22,238 25,240" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 30,236 Q 28,242 31,243" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 37,238 Q 37,244 35,244" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 43,235 Q 45,240 43,241" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- ═══ RIGHT ARM ═══ -->
+  <path d="M 130,110 C 148,130 160,160 168,192" stroke="{shirt_hex}" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <path d="M 168,192 C 171,203 170,213 168,220" stroke="{sh_l}" stroke-width="24" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 168,220 C 168,224 167,228 166,231" stroke="{sh_d}" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <!-- Right hand -->
+  <ellipse cx="166" cy="235" rx="12" ry="10" fill="{skin_hex}"/>
+  <path d="M 157,232 Q 155,238 158,240" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 163,236 Q 161,242 164,243" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 169,238 Q 169,244 167,244" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M 175,235 Q 177,240 175,241" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- ═══ TORSO ═══ -->
+  <path d="M 56,102 C 50,142 52,180 58,220 L 142,220 C 148,180 150,142 144,102 Z" fill="{shirt_hex}"/>
+  <!-- Left torso shading -->
+  <path d="M 56,102 C 50,142 52,180 58,220 L 70,220 C 64,180 62,142 66,102 Z" fill="{sh_d}" opacity="0.18"/>
+  <!-- Right torso shading -->
+  <path d="M 144,102 C 150,142 148,180 142,220 L 130,220 C 136,180 138,142 134,102 Z" fill="{sh_d}" opacity="0.18"/>
+  <!-- Centre highlight stripe -->
+  <path d="M 97,130 C 97,160 97,190 98,218" stroke="{sh_l}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.2"/>
+
+  <!-- Jacket collar / V-lapel -->
+  <path d="M 58,102 L 84,102 L 100,128 L 116,102 L 144,102 L 144,98 L 56,98 Z" fill="{sh_d}" opacity="0.38"/>
+  <!-- Under-shirt peek in V -->
+  <path d="M 88,102 L 100,120 L 112,102 Z" fill="{sh_l}" opacity="0.55"/>
+
+  <!-- Button placket -->
+  <line x1="100" y1="128" x2="100" y2="218" stroke="{sh_d}" stroke-width="1.8" stroke-dasharray="4,5" opacity="0.38"/>
+  <!-- Buttons -->
+  <circle cx="100" cy="148" r="3.5" fill="{sh_d}" opacity="0.48"/>
+  <circle cx="100" cy="167" r="3.5" fill="{sh_d}" opacity="0.48"/>
+  <circle cx="100" cy="186" r="3.5" fill="{sh_d}" opacity="0.48"/>
+  <circle cx="100" cy="205" r="3.5" fill="{sh_d}" opacity="0.48"/>
+
+  <!-- Chest pocket -->
+  <rect x="64" y="132" width="22" height="20" rx="4" fill="{sh_d}" opacity="0.2"/>
+  <line x1="64" y1="146" x2="86" y2="146" stroke="{sh_d}" stroke-width="1" opacity="0.28"/>
+
+  <!-- Bottom band (varsity stripe) -->
+  <rect x="58" y="210" width="84" height="10" rx="0" fill="{sh_l}" opacity="0.42"/>
+
+  <!-- ═══ NECK ═══ -->
+  <path d="M 87,80 C 87,73 113,73 113,80 L 113,102 C 113,106 87,106 87,102 Z" fill="{skin_hex}"/>
+
+  <!-- ═══ HEAD ═══ -->
+  <!-- Hair mass (back) -->
+  <ellipse cx="100" cy="43" rx="35" ry="40" fill="{hair}"/>
+  <!-- Face -->
+  <ellipse cx="100" cy="47" rx="30" ry="34" fill="{skin_hex}"/>
+  <!-- Ears -->
+  <ellipse cx="70" cy="50" rx="7" ry="10" fill="{skin_hex}"/>
+  <ellipse cx="130" cy="50" rx="7" ry="10" fill="{skin_hex}"/>
+  <ellipse cx="70" cy="50" rx="4" ry="6" fill="{sk_d}" opacity="0.18"/>
+  <ellipse cx="130" cy="50" rx="4" ry="6" fill="{sk_d}" opacity="0.18"/>
+
+  <!-- Hair fringe / top -->
+  <path d="M 67,20 Q 72,6 100,4 Q 128,6 133,20 Q 122,12 100,11 Q 78,12 67,20 Z" fill="{hair}"/>
+  <!-- Hair side strands left -->
+  <path d="M 67,20 Q 62,32 64,46" stroke="{hair}" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- Hair side strands right -->
+  <path d="M 133,20 Q 138,32 136,46" stroke="{hair}" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- Hair texture highlight -->
+  <path d="M 80,8 Q 90,5 100,5" stroke="{hair}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Eye sockets (subtle) -->
+  <ellipse cx="86" cy="44" rx="10" ry="7.5" fill="rgba(0,0,0,0.055)"/>
+  <ellipse cx="114" cy="44" rx="10" ry="7.5" fill="rgba(0,0,0,0.055)"/>
+
+  <!-- Eyes — whites -->
+  <ellipse cx="86" cy="44" rx="8" ry="6" fill="white"/>
+  <ellipse cx="114" cy="44" rx="8" ry="6" fill="white"/>
+  <!-- Iris -->
+  <circle cx="87" cy="44" r="4.5" fill="#2d4a8a"/>
+  <circle cx="115" cy="44" r="4.5" fill="#2d4a8a"/>
+  <!-- Pupil -->
+  <circle cx="87.5" cy="44" r="2.8" fill="#0f172a"/>
+  <circle cx="115.5" cy="44" r="2.8" fill="#0f172a"/>
+  <!-- Eye shine -->
+  <circle cx="89.5" cy="42" r="1.8" fill="white"/>
+  <circle cx="117.5" cy="42" r="1.8" fill="white"/>
+  <!-- Lower lash line -->
+  <path d="M 78,47.5 Q 86,50 94,47.5" stroke="rgba(0,0,0,0.12)" stroke-width="1" fill="none"/>
+  <path d="M 106,47.5 Q 114,50 122,47.5" stroke="rgba(0,0,0,0.12)" stroke-width="1" fill="none"/>
+  <!-- Upper lids -->
+  <path d="M 78,41.5 Q 86,38 94,41.5" stroke="#0f172a" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.65"/>
+  <path d="M 106,41.5 Q 114,38 122,41.5" stroke="#0f172a" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- Eyebrows -->
+  <path d="M 76,34 Q 86,30 96,33.5" stroke="{hair}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M 104,33.5 Q 114,30 124,34" stroke="{hair}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M 97,52 Q 94,61 100,64 Q 106,61 103,52" stroke="{sk_d}" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.42"/>
+  <circle cx="96" cy="63" r="2.5" fill="{sk_d}" opacity="0.12"/>
+  <circle cx="104" cy="63" r="2.5" fill="{sk_d}" opacity="0.12"/>
+
+  <!-- Cheeks blush -->
+  <ellipse cx="78" cy="58" rx="9" ry="6" fill="#f87171" opacity="0.07"/>
+  <ellipse cx="122" cy="58" rx="9" ry="6" fill="#f87171" opacity="0.07"/>
+
+  <!-- Mouth -->
+  <path d="M 89,72 Q 100,78 111,72" stroke="{sk_d}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.62"/>
+  <path d="M 89,72 Q 87,73.5 88.5,75.5" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.38"/>
+  <path d="M 111,72 Q 113,73.5 111.5,75.5" stroke="{sk_d}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.38"/>
+</svg>"""
+
+def mannequin_large_img(shirt_hex, pant_hex, skin_hex="#D4956A"):
+    svg = mannequin_large_svg(shirt_hex, pant_hex, skin_hex)
+    b64 = base64.b64encode(svg.encode()).decode()
+    return f'data:image/svg+xml;base64,{b64}'
 
 def skin_face_svg(hex_color, size=32):
     is_dark = lum(hex_color) < 120
@@ -633,7 +824,8 @@ if run:
             "season":       selected_season,
             "skin_profile": selected_skin or None,
         })
-    st.session_state.result     = result
+    st.session_state.result           = result
+    st.session_state.preview_combo_idx = 0
     st.session_state.last_input = {
         "shirts": selected_shirts, "pants": selected_pants,
         "season": selected_season, "skin":  selected_skin,
@@ -729,42 +921,77 @@ with col_card:
     )
     st.markdown(card, unsafe_allow_html=True)
 
-# ── OUTFITS ──
+# ── VIRTUAL TRY-ON ──
 with col_outfits:
-    st.markdown('<div class="sec-label" style="margin-bottom:14px">Top Outfit Combinations</div>', unsafe_allow_html=True)
-    for i, o in enumerate(top_outfits):
-        st.markdown(outfit_row_html(o, i, skin_hex=skin_hex), unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sec-label" style="margin-bottom:12px">Virtual Try-On</div>',
+        unsafe_allow_html=True
+    )
 
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    if not st.session_state.show_all_combos:
+    # Clamp index
+    idx = min(st.session_state.preview_combo_idx, len(all_combos) - 1) if all_combos else 0
+    pc = all_combos[idx] if all_combos else None
+
+    if pc:
+        qual_label = "Excellent" if pc["score"] >= 4 else "Good" if pc["score"] >= 3 else "Decent" if pc["score"] >= 2 else "Weak"
+        qual_color = "#1d4ed8" if pc["score"] >= 4 else "#16a34a" if pc["score"] >= 3 else "#d97706" if pc["score"] >= 2 else "#94a3b8"
+        data_uri = mannequin_large_img(pc["shirt_hex"], pc["pant_hex"], skin_hex)
+
         st.markdown(
-            f'<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px 18px;margin-top:10px">'
-            f'<div style="font-size:13px;font-weight:600;color:#1e3a8a">See all outfit combinations?</div>'
-            f'<div style="font-size:11px;color:#3b82f6;margin-top:2px">'
-            f'{len(all_combos)} pairings · ranked by match score</div></div>',
+            f'<div style="background:linear-gradient(175deg,#f0f4fb 0%,#e4ecf7 100%);'
+            f'border-radius:22px;border:1px solid #dde6f5;padding:22px 14px 14px;'
+            f'text-align:center;box-shadow:inset 0 1px 4px rgba(255,255,255,0.9),'
+            f'0 6px 24px rgba(15,25,80,0.09)">'
+            f'<img src="{data_uri}" width="190" style="display:inline-block;filter:drop-shadow(0 8px 20px rgba(15,25,80,0.18))"/>'
+            f'<div style="margin-top:12px">'
+            f'<div style="font-size:13px;font-weight:700;color:#0f172a">'
+            f'{pc["shirt"]} <span style="color:#94a3b8;font-weight:400">+</span> {pc["pant"]}</div>'
+            f'<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:5px">'
+            f'<span style="font-size:11px;font-weight:700;color:{qual_color};'
+            f'background:{"#dbeafe" if pc["score"]>=4 else "#dcfce7" if pc["score"]>=3 else "#fef9c3" if pc["score"]>=2 else "#f1f5f9"};'
+            f'padding:2px 9px;border-radius:20px">{qual_label}</span>'
+            f'<span style="font-size:12px;color:#3b82f6;font-weight:700;font-family:monospace">'
+            f'{pc["score"]:.1f}/5.0</span>'
+            f'</div></div></div>',
             unsafe_allow_html=True
         )
-        bc1, bc2 = st.columns(2)
-        with bc1:
-            if st.button("Show all ✦", use_container_width=True):
-                st.session_state.show_all_combos = True
+
+    # ── Combo chips ──
+    st.markdown(
+        f'<div style="font-size:10px;font-weight:700;letter-spacing:.12em;'
+        f'text-transform:uppercase;color:#94a3b8;margin:14px 0 8px">'
+        f'Select combination · {len(all_combos)} pairings</div>',
+        unsafe_allow_html=True
+    )
+
+    chip_cols = st.columns(4)
+    for i, combo in enumerate(all_combos[:16]):
+        with chip_cols[i % 4]:
+            is_sel = (i == idx)
+            border = "#1d4ed8" if is_sel else "#e2e8f0"
+            bg     = "#dbeafe" if is_sel else "#ffffff"
+            ring   = "box-shadow:0 0 0 2px #93c5fd;" if is_sel else ""
+            st.markdown(
+                f'<div style="padding:7px 4px 5px;border-radius:12px;border:1.5px solid {border};'
+                f'background:{bg};text-align:center;margin-bottom:7px;{ring}'
+                f'transition:all .15s">'
+                f'<div style="display:flex;justify-content:center;gap:3px;margin-bottom:4px">'
+                f'<div style="width:18px;height:18px;border-radius:50%;background:{combo["shirt_hex"]};'
+                f'border:1.5px solid rgba(0,0,0,0.12);flex-shrink:0"></div>'
+                f'<div style="width:18px;height:18px;border-radius:50%;background:{combo["pant_hex"]};'
+                f'border:1.5px solid rgba(0,0,0,0.12);flex-shrink:0"></div>'
+                f'</div>'
+                f'<div style="font-size:7.5px;color:#64748b;line-height:1.25;font-weight:500">'
+                f'{combo["shirt"][:9]}</div>'
+                f'<div style="font-size:7.5px;color:#64748b;font-weight:500">{combo["pant"][:9]}</div>'
+                f'<div style="font-size:9px;color:#3b82f6;font-weight:700;margin-top:2px;font-family:monospace">'
+                f'{combo["score"]:.1f}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            if st.button("▶", key=f"tryon_{i}", use_container_width=True, help=f"{combo['shirt']} + {combo['pant']}"):
+                st.session_state.preview_combo_idx = i
                 st.rerun()
-        with bc2:
-            if st.button("Skip", use_container_width=True): pass
-    else:
-        st.markdown(
-            f'<div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:12px">'
-            f'All {len(all_combos)} combinations '
-            f'<span style="color:#94a3b8;font-weight:400">· ranked by match score</span></div>',
-            unsafe_allow_html=True
-        )
-        cols3 = st.columns(3)
-        for i, combo in enumerate(all_combos):
-            with cols3[i%3]:
-                st.markdown(combo_card_html(combo, skin_hex=skin_hex), unsafe_allow_html=True)
-        if st.button("Hide combinations ↑", use_container_width=True):
-            st.session_state.show_all_combos = False
-            st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 
